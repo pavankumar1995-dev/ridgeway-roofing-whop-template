@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env*
+!.env.example
+.whop/
+research/
+evidence/
+job*.json
+.wrangler/
+*.log
+.DS_Store

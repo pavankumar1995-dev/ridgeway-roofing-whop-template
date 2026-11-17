@@ -1,0 +1,32 @@
+{
+  "name": "ridgeway-roofing-whop-template",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "deploy": "whop apps deploy"
+  },
+  "dependencies": {
+    "@whop/elements": "1.10.0",
+    "@whop/elements-react": "1.10.0",
+    "hono": "^4.10.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.69.1",
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.5.0",
+    "@whop/cli": "1.0.0",
+    "typescript": "^5.8.0",
+    "vite": "^6.3.0",
+    "wrangler": "^4.163.0"
+  }
+}
