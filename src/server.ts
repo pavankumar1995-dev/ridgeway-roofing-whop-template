@@ -7,10 +7,11 @@ const env=(c:any,key:string)=>String(c.env?.[key]??process.env[key]??'');
 const sandbox=(c:any)=>env(c,'WHOP_ENVIRONMENT')!=='production';
 const account=(c:any)=>env(c,sandbox(c)?'WHOP_SANDBOX_ACCOUNT_ID':'WHOP_ACCOUNT_ID');
 class ApiError extends Error{constructor(public status:number,message:string){super(message)}}
-async function whop(c:any,path:string,body?:unknown){
- const base=sandbox(c)?'https://sandbox-api.whop.com':env(c,'WHOP_API_ORIGIN')||'https://api.whop.com';
- const key=env(c,sandbox(c)?'WHOP_SANDBOX_API_KEY':'WHOP_API_KEY');
- if(!account(c)||sandbox(c)&&!key)throw new ApiError(503,'This demo is awaiting Whop account configuration. Nothing has been submitted.');
+async function whop(c:any,path:string,body?:unknown,memberOnly=false){
+ const liveMember=memberOnly&&env(c,'WHOP_MEMBER_ENVIRONMENT')==='production';
+ const base=liveMember?'https://api.whop.com':sandbox(c)?'https://sandbox-api.whop.com':env(c,'WHOP_API_ORIGIN')||'https://api.whop.com';
+ const key=env(c,liveMember?'WHOP_MEMBER_API_KEY':sandbox(c)?'WHOP_SANDBOX_API_KEY':'WHOP_API_KEY');
+ if(!(liveMember?env(c,'WHOP_MEMBER_ACCOUNT_ID'):account(c))||!key)throw new ApiError(503,'This demo is awaiting Whop account configuration. Nothing has been submitted.');
  const headers:Record<string,string>={'Content-Type':'application/json','Api-Version-Date':'2026-11-10-1'};
  if(key)headers.Authorization='Bearer '+key;
  const res=await fetch(base+'/api/v1'+path,{method:body?'POST':'GET',headers,body:body?JSON.stringify(body):undefined});
@@ -27,7 +28,7 @@ app.use('/api/*',async(c,next)=>{
  }
  try{await next()}catch(e){const err=e as ApiError;return c.json({error:err.message||'Request failed'},(err.status||500) as any)}
 });
-app.get('/api/config',c=>c.json({environment:sandbox(c)?'sandbox':'production',accountId:account(c),plans:{inspection:env(c,'WHOP_INSPECTION_PLAN_ID'),deposit:env(c,'WHOP_DEPOSIT_PLAN_ID'),tuneup:env(c,'WHOP_TUNEUP_PLAN_ID')},configured:!!account(c)&&!!env(c,'WHOP_INSPECTION_PLAN_ID')}));
+app.get('/api/config',c=>c.json({environment:sandbox(c)?'sandbox':'production',memberEnvironment:env(c,'WHOP_MEMBER_ENVIRONMENT')||'sandbox',accountId:account(c),plans:{inspection:env(c,'WHOP_INSPECTION_PLAN_ID'),deposit:env(c,'WHOP_DEPOSIT_PLAN_ID'),tuneup:env(c,'WHOP_TUNEUP_PLAN_ID')},configured:!!account(c)&&!!env(c,'WHOP_INSPECTION_PLAN_ID')}));
 const attempts=new Map<string,number>();
 app.post('/api/estimate',async c=>{
  const d=await c.req.json();
@@ -38,7 +39,7 @@ app.post('/api/estimate',async c=>{
  if((attempts.get(key)||0)>Date.now()-60000)return c.json({error:'Please wait a minute before sending another request.'},429);
  attempts.set(key,Date.now());if(attempts.size>5000)attempts.clear();
  // Whop retired Leads (HTTP 410). Supported replacement: Create Member (POST /members). Success only when Whop returns a real member id.
- const member=await whop(c,'/members',{account_id:account(c),email,name});
+ const member=await whop(c,'/members',{account_id:env(c,'WHOP_MEMBER_ENVIRONMENT')==='production'?env(c,'WHOP_MEMBER_ACCOUNT_ID'):account(c),email,name},true);
  if(!member.id||!/^mber_/.test(String(member.id)))throw new ApiError(502,'Whop returned no member reference. Please contact the business.');
  return c.json({id:member.id,kind:'member'},201);
 });
