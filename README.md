@@ -1,6 +1,6 @@
 # Ridgeway Roofing - Whop website template
 
-A responsive roofing company website built with React, TypeScript, Vite and Hono, made to be hosted as a Whop website app. The business is fictional. Everything runs against the **Whop sandbox**. No real payments are taken.
+A responsive roofing company website built with React, TypeScript, Vite and Hono, made to be hosted as a Whop website app. The business is fictional. Payments run against the **Whop sandbox**. No real payments are taken. The deployed estimate form uses a separate, member-manage-only key to create a $0 customer in the live Ridgeway Roofing business.
 
 ![Estimate form after a successful submit](docs/screenshots/estimate-form-success.png)
 
@@ -21,8 +21,9 @@ A responsive roofing company website built with React, TypeScript, Vite and Hono
 
 This project originally sent estimate requests to the Whop Leads API. Whop has retired that API, so the form now uses Create Member instead. The key used for this needs only the `member:manage` permission. The unit test for the form mocks the network, so it does not prove a live call works. A live sandbox submit was checked separately and returned a `mber_` ID.
 
-## Sandbox only
+## Payment sandbox and live member capture
 
+- Optional `WHOP_MEMBER_ENVIRONMENT=production`, `WHOP_MEMBER_ACCOUNT_ID` and encrypted `WHOP_MEMBER_API_KEY` route only Create Member to the live business. The key needs only `member:manage`. These variables do not switch payments to production.
 - `WHOP_ENVIRONMENT` defaults to `sandbox`. Use a sandbox business and a sandbox API key together. Never mix production IDs with sandbox keys.
 - Sandbox payments use test cards only. Apple Pay and Google Pay cannot run in the Whop sandbox, and this project does not fake them.
 - The sample contact details are reserved example data. Replace them before any real launch. Add real privacy, contract, refund and scheduling terms, and verified licensing and insurance claims, before accepting real customers.
